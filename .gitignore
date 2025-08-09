@@ -17,3 +17,6 @@ docker/logs/
 /dist/
 .claude
 .serena
+
+adbugreport*
+adprompt*

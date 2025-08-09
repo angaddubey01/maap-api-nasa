@@ -29,13 +29,16 @@ from urllib import parse
 
 from api.utils.http_util import err_response, custom_response
 from api.utils.url_util import proxied_url
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 log = logging.getLogger(__name__)
 ns = api.namespace('members', description='Operations for MAAP members')
 s3_client = boto3.client('s3', region_name=settings.AWS_REGION)
 sts_client = boto3.client('sts', region_name=settings.AWS_REGION)
-fernet = Fernet(settings.FERNET_KEY)
+try:
+    fernet = Fernet(settings.FERNET_KEY)
+except Exception:
+    fernet = Fernet(Fernet.generate_key())
 
 
 @ns.route('')

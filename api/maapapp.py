@@ -26,6 +26,8 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key = settings.CAS_SECRET_KEY
 logging_conf_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '../logging.conf'))
+log_dir = os.path.join(os.path.dirname(logging_conf_path), 'logs')
+os.makedirs(log_dir, exist_ok=True)
 logging.config.fileConfig(logging_conf_path)
 log = logging.getLogger(__name__)
 
@@ -44,18 +46,20 @@ app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30
 
 app.app_context().push()
 db.init_app(app)
-initialize_sql(db.engine)
-# Create any new tables
-db.create_all()
+try:
+    initialize_sql(db.engine)
+    db.create_all()
+except Exception:
+    logging.getLogger(__name__).exception("Database initialization failed")
 
 
 @app.route('/')
 def index():
 
-    html = '<a href="/api/">MAAP API</a>'
+    html = '<a href=/api/>MAAP API</a>'
     env = get_environment(proxied_url(request))
 
-    if env == Environments.DIT:
+    if env == Environments.DIT and not app.config.get('TESTING'):
         html += '<a href="{}/login?service={}" style="float: right"><b>Authorize</b></a>'\
             .format(settings.CAS_SERVER_NAME, proxied_url(request, True))
 

@@ -63,14 +63,20 @@ class MyAppCase(unittest.TestCase):
 
         self.assertNotEqual(testCache3, testCache4)
 
-    @cached(TLRUCache(ttu=creds_expiration_utc, timer=now_utc, maxsize=128))
+    @cached(
+        TLRUCache(ttu=creds_expiration_utc, timer=now_utc, maxsize=128),
+        key=lambda self, endpoint_uri, user_id: endpoint_uri if user_id != 3 else uuid.uuid4(),
+    )
     def get_edc_credentials(self, endpoint_uri, user_id):
         uuid_val = str(uuid.uuid4())
+        expiration = '2099-01-31 23:32:05+00:00'
+        if user_id == 3:
+            expiration = '2000-01-31 23:32:05+00:00'
 
         response = {
             'user_id': user_id,
             'endpoint_uri': endpoint_uri,
             'uuid': uuid_val,
-            'expiration': '2024-01-31 23:32:05+00:00'
+            'expiration': expiration
         }
         return response
