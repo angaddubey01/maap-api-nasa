@@ -19,6 +19,8 @@ from api.endpoints.organizations import ns as organizations_namespace
 from api.endpoints.admin import ns as admin_namespace
 from api.restplus import api
 from api.maap_database import db
+from sqlalchemy.exc import SQLAlchemyError
+from api.utils.http_util import err_response
 from api.models import initialize_sql
 from flask_cors import CORS
 
@@ -76,6 +78,13 @@ def index():
                     '<b>{}</b></div>'.format(member_session.member.username, member_session.session_key)
 
     return html
+
+
+@app.errorhandler(SQLAlchemyError)
+def handle_sqlalchemy_error(error):
+    # Ensure standardized error response and add contextual logging
+    log.exception("Unhandled SQLAlchemyError at %s %s", request.method, request.path)
+    return err_response(str(error), code=500)
 
 
 def configure_app(flask_app):

@@ -4,6 +4,8 @@ from flask import jsonify
 
 from flask_restx import Api
 from api import settings
+from sqlalchemy.exc import SQLAlchemyError
+from api.utils.http_util import err_response
 
 log = logging.getLogger(__name__)
 
@@ -46,10 +48,16 @@ def default_error_handler(e):
         return {'message': message}, 500
 
 
+@api.errorhandler(SQLAlchemyError)
+def handle_sqlalchemy_error(e):
+    # Ensure DB errors return the standard error response format
+    log.exception("SQLAlchemyError during request")
+    return err_response(str(e), 500)
+
+
 @api.errorhandler(CmrError)
 def handle_cmr_error(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
-
 
